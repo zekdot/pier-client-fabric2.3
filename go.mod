@@ -1,18 +1,19 @@
 module github.com/meshplus/pier-client-fabric
 
-go 1.13
+go 1.15
 
 require (
 	github.com/Rican7/retry v0.1.0
 	github.com/VividCortex/gohistogram v1.0.0 // indirect
 	github.com/cloudflare/cfssl v0.0.0-20180223231731-4e2dcbde5004
-	github.com/golang/protobuf v1.4.0
+	github.com/golang/protobuf v1.5.2
 	github.com/golangci/golangci-lint v1.23.0 // indirect
 	github.com/google/certificate-transparency-go v1.1.0 // indirect
 	github.com/hyperledger/fabric v2.0.1+incompatible
-	github.com/hyperledger/fabric-chaincode-go v0.0.0-20200511190512-bcfeb58dd83a
+	github.com/hyperledger/fabric-chaincode-go v0.0.0-20210718160520-38d29fabecb9
+	github.com/hyperledger/fabric-contract-api-go v1.1.1
 	github.com/hyperledger/fabric-lib-go v1.0.0 // indirect
-	github.com/hyperledger/fabric-protos-go v0.0.0-20200330074707-cfe579e86986
+	github.com/hyperledger/fabric-protos-go v0.0.0-20200424173316-dd554ba3746e
 	github.com/hyperledger/fabric-sdk-go v1.0.0-alpha5
 	github.com/meshplus/bitxhub-kit v1.0.1-0.20200525112026-df2160653e23
 	github.com/meshplus/bitxhub-model v1.0.0-rc4.0.20200608065824-2fbc63639e92

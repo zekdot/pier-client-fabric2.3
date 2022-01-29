@@ -6,9 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hyperledger/fabric/core/chaincode/lib/cid"
-	"github.com/hyperledger/fabric/core/chaincode/shim"
-	pb "github.com/hyperledger/fabric/protos/peer"
+	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+	//pb "github.com/hyperledger/fabric/protos/peer"
 )
 
 const (
@@ -18,12 +17,14 @@ const (
 	callbackMeta        = "callback-meta"
 	whiteList           = "white-list"
 	adminList           = "admin-list"
-	passed              = "1"
-	rejected            = "2"
+	//passed              = "1"
+	//rejected            = "2"
 	delimiter           = "&"
 )
 
-type Broker struct{}
+type Broker struct{
+	contractapi.Contract
+}
 
 type Event struct {
 	Index         uint64 `json:"index"`
@@ -35,127 +36,73 @@ type Event struct {
 	Callback      string `json:"callback"`
 }
 
-func (broker *Broker) Init(stub shim.ChaincodeStubInterface) pb.Response {
-	c, err := cid.New(stub)
+func (broker *Broker) Init(ctx contractapi.TransactionContextInterface) error {
+	clientID, err := ctx.GetClientIdentity().GetID()
 	if err != nil {
-		return shim.Error(fmt.Sprintf("new cid: %s", err.Error()))
-	}
-
-	clientID, err := c.GetID()
-	if err != nil {
-		return shim.Error(fmt.Sprintf("get client id: %s", err.Error()))
+		return err // fmt.Error(fmt.Sprintf("get client id: %s", err.Error()))
 	}
 
 	m := make(map[string]uint64)
 	m[clientID] = 1
-	err = broker.putMap(stub, adminList, m)
+	err = broker.putMap(ctx, adminList, m)
 	if err != nil {
-		return shim.Error(fmt.Sprintf("Initialize admin list fail %s", err.Error()))
+		return err
 	}
 
-	return broker.initialize(stub)
+	return broker.initialize(ctx)
 }
 
-func (broker *Broker) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
-	function, args := stub.GetFunctionAndParameters()
-
-	if ok := broker.checkAdmin(stub, function); !ok {
-		return shim.Error("Not allowed to invoke interchain function by non-admin client")
-	}
-
-	if ok := broker.checkWhitelist(stub, function); !ok {
-		return shim.Error("Not allowed to invoke interchain function by unregister chaincode")
-	}
-
-	fmt.Printf("invoke: %s\n", function)
-	switch function {
-	case "register":
-		return broker.register(stub)
-	case "audit":
-		return broker.audit(stub, args)
-	case "getInnerMeta":
-		return broker.getInnerMeta(stub)
-	case "getOuterMeta":
-		return broker.getOuterMeta(stub)
-	case "getCallbackMeta":
-		return broker.getCallbackMeta(stub)
-	case "getInMessage":
-		return broker.getInMessage(stub, args)
-	case "getOutMessage":
-		return broker.getOutMessage(stub, args)
-	case "InterchainTransferInvoke":
-		return broker.InterchainTransferInvoke(stub, args)
-	case "InterchainDataSwapInvoke":
-		return broker.InterchainDataSwapInvoke(stub, args)
-	case "InterchainInvoke":
-		return broker.InterchainInvoke(stub, args)
-	case "interchainCharge":
-		return broker.interchainCharge(stub, args)
-	case "interchainConfirm":
-		return broker.interchainConfirm(stub, args)
-	case "interchainGet":
-		return broker.interchainGet(stub, args)
-	case "interchainSet":
-		return broker.interchainSet(stub, args)
-	case "getList":
-		return broker.getList(stub)
-	case "pollingEvent":
-		return broker.pollingEvent(stub, args)
-	case "initialize":
-		return broker.initialize(stub)
-	default:
-		return shim.Error("invalid function: " + function + ", args: " + strings.Join(args, ","))
-	}
-}
-
-func (broker *Broker) initialize(stub shim.ChaincodeStubInterface) pb.Response {
+func (broker *Broker) initialize(ctx contractapi.TransactionContextInterface) error {
 	inCounter := make(map[string]uint64)
 	outCounter := make(map[string]uint64)
 	callbackCounter := make(map[string]uint64)
 
-	if err := broker.putMap(stub, innerMeta, inCounter); err != nil {
-		return shim.Error(err.Error())
+	if err := broker.putMap(ctx, innerMeta, inCounter); err != nil {
+		return err
 	}
 
-	if err := broker.putMap(stub, outterMeta, outCounter); err != nil {
-		return shim.Error(err.Error())
+	if err := broker.putMap(ctx, outterMeta, outCounter); err != nil {
+		return err
 	}
 
-	if err := broker.putMap(stub, callbackMeta, callbackCounter); err != nil {
-		return shim.Error(err.Error())
+	if err := broker.putMap(ctx, callbackMeta, callbackCounter); err != nil {
+		return err
 	}
 
-	return shim.Success(nil)
+	return nil
 }
 
-func (broker *Broker) InterchainTransferInvoke(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+func (broker *Broker) InterchainTransferInvoke(ctx contractapi.TransactionContextInterface) (*Response, error) {
+	_, args := ctx.GetStub().GetFunctionAndParameters()
 	if len(args) < 5 {
-		return shim.Error("incorrect number of arguments, expecting 5")
+		//return shim.Error("incorrect number of arguments, expecting 5")
+		return errorResponse("incorrect number of arguments, expecting 5"), nil
 	}
-	cid, err := getChaincodeID(stub)
+	cid, err := getChaincodeID(ctx)
 	if err != nil {
-		return shim.Error(err.Error())
+		return nil, err
 	}
 
 	newArgs := make([]string, 0)
 	newArgs = append(newArgs, args[0], cid, args[1], "interchainCharge", strings.Join(args[2:], ","), "interchainConfirm")
 
-	return broker.InterchainInvoke(stub, newArgs)
+	return broker.InterchainInvoke(ctx, newArgs)
 }
 
-func (broker *Broker) InterchainDataSwapInvoke(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+func (broker *Broker) InterchainDataSwapInvoke(ctx contractapi.TransactionContextInterface) (*Response, error) {
+	_, args := ctx.GetStub().GetFunctionAndParameters()
 	if len(args) < 3 {
-		return shim.Error("incorrect number of arguments, expecting 3")
+		return errorResponse("incorrect number of arguments, expecting 5"), nil
 	}
-	cid, err := getChaincodeID(stub)
+	cid, err := getChaincodeID(ctx)
 	if err != nil {
-		return shim.Error(err.Error())
+		return nil, err
 	}
 
 	newArgs := make([]string, 0)
 	newArgs = append(newArgs, args[0], cid, args[1], "interchainGet", args[2], "interchainSet")
 
-	return broker.InterchainInvoke(stub, newArgs)
+	return broker.InterchainInvoke(ctx, newArgs)
 }
 
 // InterchainInvoke
@@ -165,15 +112,18 @@ func (broker *Broker) InterchainDataSwapInvoke(stub shim.ChaincodeStubInterface,
 // string func,
 // string args,
 // string callback;
-func (broker *Broker) InterchainInvoke(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+func (broker *Broker) InterchainInvoke(ctx contractapi.TransactionContextInterface, args[] string) (*Response, error) {
+	//_, args := ctx.GetStub().GetFunctionAndParameters()
 	if len(args) < 6 {
-		return shim.Error("incorrect number of arguments, expecting 6")
+		return errorResponse("incorrect number of arguments, expecting 6"), nil
+		//return shim.Error("incorrect number of arguments, expecting 6")
 	}
 
 	destChainID := args[0]
-	outMeta, err := broker.getMap(stub, outterMeta)
+	outMeta, err := broker.getMap(ctx, outterMeta)
 	if err != nil {
-		return shim.Error(err.Error())
+		//return shim.Error(err.Error())
+		return nil, err
 	}
 
 	if _, ok := outMeta[destChainID]; !ok {
@@ -191,90 +141,44 @@ func (broker *Broker) InterchainInvoke(stub shim.ChaincodeStubInterface, args []
 	}
 
 	outMeta[tx.DstChainID]++
-	if err := broker.putMap(stub, outterMeta, outMeta); err != nil {
-		return shim.Error(err.Error())
+	if err := broker.putMap(ctx, outterMeta, outMeta); err != nil {
+		//return shim.Error(err.Error())
+		return nil, err
 	}
 
 	txValue, err := json.Marshal(tx)
 	if err != nil {
-		return shim.Error(err.Error())
+		//return shim.Error(err.Error())
+		return nil, err
 	}
 
 	// persist out message
 	key := broker.outMsgKey(tx.DstChainID, strconv.FormatUint(tx.Index, 10))
-	if err := stub.PutState(key, txValue); err != nil {
-		return shim.Error(fmt.Errorf("persist event: %w", err).Error())
+	if err := ctx.GetStub().PutState(key, txValue); err != nil {
+		//return shim.Error(fmt.Errorf("persist event: %w", err).Error())
+		return nil, err
 	}
 
-	if err := stub.SetEvent(interchainEventName, txValue); err != nil {
-		return shim.Error(fmt.Errorf("set event: %w", err).Error())
+	if err := ctx.GetStub().SetEvent(interchainEventName, txValue); err != nil {
+		//return shim.Error(fmt.Errorf("set event: %w", err).Error())
+		return nil, err
 	}
 
-	return shim.Success(nil)
-}
-
-// 业务合约通过该接口进行注册: 0表示正在审核，1表示审核通过，2表示审核失败
-func (broker *Broker) register(stub shim.ChaincodeStubInterface) pb.Response {
-	list, err := broker.getMap(stub, whiteList)
-	if err != nil {
-		return shim.Error(fmt.Sprintf("Get white list :%s", err.Error()))
-	}
-
-	key, err := getChaincodeID(stub)
-	if err != nil {
-		return shim.Error(fmt.Sprintf("get chaincode uniuqe id %s", err.Error()))
-	}
-
-	if list[key] == 1 {
-		return shim.Error(fmt.Sprintf("your chaincode %s has already passed", key))
-	} else if list[key] == 2 {
-		return shim.Error(fmt.Sprintf("chaincode %s registeration is rejected", key))
-	}
-
-	list[key] = 0
-	if err = broker.putMap(stub, whiteList, list); err != nil {
-		return shim.Error(err.Error())
-	}
-
-	return shim.Success([]byte(key))
-}
-
-// 通过chaincode自带的CID库可以验证调用者的相关信息
-func (broker *Broker) audit(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-	channel := args[0]
-	chaincodeName := args[1]
-	status := args[2]
-	if status != passed && status != rejected {
-		return shim.Error(fmt.Sprintf("status is not one of `1`, `2`"))
-	}
-
-	st, err := strconv.ParseUint(status, 10, 64)
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-
-	list, err := broker.getMap(stub, whiteList)
-	if err != nil {
-		return shim.Error(fmt.Sprintf("Get white list :%s", err.Error()))
-	}
-
-	list[getKey(channel, chaincodeName)] = st
-	if err = broker.putMap(stub, whiteList, list); err != nil {
-		return shim.Error(err.Error())
-	}
-
-	return shim.Success([]byte(fmt.Sprintf("set status of chaincode %s to %s", getKey(channel, chaincodeName), status)))
+	return successResponse(nil), nil //shim.Success(nil)
 }
 
 // polling m(m is the out meta plugin has received)
-func (broker *Broker) pollingEvent(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+func (broker *Broker) PollingEvent(ctx contractapi.TransactionContextInterface) ([]*Event, error) {
+	_, args := ctx.GetStub().GetFunctionAndParameters()
 	m := make(map[string]uint64)
 	if err := json.Unmarshal([]byte(args[0]), &m); err != nil {
-		return shim.Error(fmt.Errorf("unmarshal out meta: %s", err).Error())
+		return nil, err
+		//return shim.Error(fmt.Errorf("unmarshal out meta: %s", err).Error())
 	}
-	outMeta, err := broker.getMap(stub, outterMeta)
+	outMeta, err := broker.getMap(ctx, outterMeta)
 	if err != nil {
-		return shim.Error(err.Error())
+		//return shim.Error(err.Error())
+		return nil, err
 	}
 	events := make([]*Event, 0)
 	for addr, idx := range outMeta {
@@ -283,7 +187,7 @@ func (broker *Broker) pollingEvent(stub shim.ChaincodeStubInterface, args []stri
 			startPos = 0
 		}
 		for i := startPos + 1; i <= idx; i++ {
-			eb, err := stub.GetState(broker.outMsgKey(addr, strconv.FormatUint(i, 10)))
+			eb, err := ctx.GetStub().GetState(broker.outMsgKey(addr, strconv.FormatUint(i, 10)))
 			if err != nil {
 				fmt.Printf("get out event by key %s fail", broker.outMsgKey(addr, strconv.FormatUint(i, 10)))
 				continue
@@ -296,16 +200,22 @@ func (broker *Broker) pollingEvent(stub shim.ChaincodeStubInterface, args []stri
 			events = append(events, e)
 		}
 	}
-	ret, err := json.Marshal(events)
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-	return shim.Success(ret)
+	//ret, err := json.Marshal(events)
+	//if err != nil {
+	//	return nil, err
+	//}
+	return events, nil
 }
-
+//
 func main() {
-	err := shim.Start(new(Broker))
+	chaincode, err := contractapi.NewChaincode(new(Broker))
+
 	if err != nil {
-		fmt.Printf("Error starting chaincode: %s", err)
+		fmt.Printf("Error create broker chaincode: %s", err.Error())
+		return
+	}
+
+	if err := chaincode.Start(); err != nil {
+		fmt.Printf("Error starting broker chaincode: %s", err.Error())
 	}
 }

@@ -1,159 +1,93 @@
-# github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78
-github.com/Azure/go-ansiterm
-github.com/Azure/go-ansiterm/winterm
-# github.com/Microsoft/go-winio v0.4.15-0.20190919025122-fc70bd9a86b5
-github.com/Microsoft/go-winio
-github.com/Microsoft/go-winio/pkg/guid
-# github.com/Microsoft/hcsshim v0.8.7-0.20191101173118-65519b62243c
-github.com/Microsoft/hcsshim/osversion
-# github.com/containerd/containerd v1.3.0
-github.com/containerd/containerd/errdefs
-# github.com/containerd/continuity v0.0.0-20190426062206-aaeac12a7ffc
-github.com/containerd/continuity/fs
-github.com/containerd/continuity/syscallx
-github.com/containerd/continuity/sysx
-# github.com/docker/distribution v2.7.1+incompatible
-github.com/docker/distribution/registry/api/errcode
-# github.com/docker/docker v1.4.2-0.20191101170500-ac7306503d23
-github.com/docker/docker/api/types/blkiodev
-github.com/docker/docker/api/types/container
-github.com/docker/docker/api/types/filters
-github.com/docker/docker/api/types/mount
-github.com/docker/docker/api/types/network
-github.com/docker/docker/api/types/registry
-github.com/docker/docker/api/types/strslice
-github.com/docker/docker/api/types/swarm
-github.com/docker/docker/api/types/swarm/runtime
-github.com/docker/docker/api/types/versions
-github.com/docker/docker/errdefs
-github.com/docker/docker/pkg/archive
-github.com/docker/docker/pkg/fileutils
-github.com/docker/docker/pkg/homedir
-github.com/docker/docker/pkg/idtools
-github.com/docker/docker/pkg/ioutils
-github.com/docker/docker/pkg/jsonmessage
-github.com/docker/docker/pkg/longpath
-github.com/docker/docker/pkg/mount
-github.com/docker/docker/pkg/pools
-github.com/docker/docker/pkg/stdcopy
-github.com/docker/docker/pkg/system
-github.com/docker/docker/pkg/term
-github.com/docker/docker/pkg/term/windows
-# github.com/docker/go-connections v0.4.0
-github.com/docker/go-connections/nat
-# github.com/docker/go-units v0.4.0
-github.com/docker/go-units
-# github.com/fsnotify/fsnotify v1.4.7
-github.com/fsnotify/fsnotify
-# github.com/fsouza/go-dockerclient v1.6.3
-github.com/fsouza/go-dockerclient
-# github.com/gogo/protobuf v1.2.1
-github.com/gogo/protobuf/proto
-# github.com/golang/protobuf v1.3.5
+# github.com/PuerkitoBio/purell v1.1.1
+github.com/PuerkitoBio/purell
+# github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578
+github.com/PuerkitoBio/urlesc
+# github.com/go-openapi/jsonpointer v0.19.3
+github.com/go-openapi/jsonpointer
+# github.com/go-openapi/jsonreference v0.19.2
+github.com/go-openapi/jsonreference
+# github.com/go-openapi/spec v0.19.4
+github.com/go-openapi/spec
+# github.com/go-openapi/swag v0.19.5
+github.com/go-openapi/swag
+# github.com/gobuffalo/envy v1.7.0
+github.com/gobuffalo/envy
+# github.com/gobuffalo/packd v0.3.0
+github.com/gobuffalo/packd
+github.com/gobuffalo/packd/internal/takeon/github.com/markbates/errx
+# github.com/gobuffalo/packr v1.30.1
+github.com/gobuffalo/packr
+# github.com/golang/protobuf v1.5.2
+## explicit
 github.com/golang/protobuf/proto
 github.com/golang/protobuf/ptypes
 github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/empty
 github.com/golang/protobuf/ptypes/timestamp
-# github.com/grpc-ecosystem/go-grpc-middleware v1.2.0
-github.com/grpc-ecosystem/go-grpc-middleware
-# github.com/hashicorp/hcl v1.0.0
-github.com/hashicorp/hcl
-github.com/hashicorp/hcl/hcl/ast
-github.com/hashicorp/hcl/hcl/parser
-github.com/hashicorp/hcl/hcl/printer
-github.com/hashicorp/hcl/hcl/scanner
-github.com/hashicorp/hcl/hcl/strconv
-github.com/hashicorp/hcl/hcl/token
-github.com/hashicorp/hcl/json/parser
-github.com/hashicorp/hcl/json/scanner
-github.com/hashicorp/hcl/json/token
-# github.com/hyperledger/fabric v1.4.6
+# github.com/hyperledger/fabric v2.1.1+incompatible
+## explicit
 github.com/hyperledger/fabric/bccsp
 github.com/hyperledger/fabric/bccsp/factory
-github.com/hyperledger/fabric/bccsp/idemix
-github.com/hyperledger/fabric/bccsp/idemix/bridge
-github.com/hyperledger/fabric/bccsp/idemix/handlers
 github.com/hyperledger/fabric/bccsp/pkcs11
-github.com/hyperledger/fabric/bccsp/signer
 github.com/hyperledger/fabric/bccsp/sw
 github.com/hyperledger/fabric/bccsp/utils
-github.com/hyperledger/fabric/common/attrmgr
-github.com/hyperledger/fabric/common/crypto
 github.com/hyperledger/fabric/common/flogging
 github.com/hyperledger/fabric/common/flogging/fabenc
-github.com/hyperledger/fabric/common/ledger
-github.com/hyperledger/fabric/common/metadata
-github.com/hyperledger/fabric/common/metrics
-github.com/hyperledger/fabric/common/semaphore
 github.com/hyperledger/fabric/common/util
-github.com/hyperledger/fabric/core/chaincode/lib/cid
-github.com/hyperledger/fabric/core/chaincode/platforms
-github.com/hyperledger/fabric/core/chaincode/platforms/ccmetadata
-github.com/hyperledger/fabric/core/chaincode/shim
-github.com/hyperledger/fabric/core/comm
-github.com/hyperledger/fabric/core/config
-github.com/hyperledger/fabric/core/container/util
-github.com/hyperledger/fabric/idemix
-github.com/hyperledger/fabric/msp
-github.com/hyperledger/fabric/protos/common
-github.com/hyperledger/fabric/protos/ledger/queryresult
-github.com/hyperledger/fabric/protos/ledger/rwset
-github.com/hyperledger/fabric/protos/ledger/rwset/kvrwset
-github.com/hyperledger/fabric/protos/msp
-github.com/hyperledger/fabric/protos/peer
-github.com/hyperledger/fabric/protos/token
-github.com/hyperledger/fabric/protos/utils
-# github.com/hyperledger/fabric-amcl v0.0.0-20200128223036-d1aa2665426a
-github.com/hyperledger/fabric-amcl/amcl
-github.com/hyperledger/fabric-amcl/amcl/FP256BN
-# github.com/konsorten/go-windows-terminal-sequences v1.0.1
-github.com/konsorten/go-windows-terminal-sequences
-# github.com/magiconair/properties v1.8.1
-github.com/magiconair/properties
-# github.com/miekg/pkcs11 v1.0.3
+# github.com/hyperledger/fabric-chaincode-go v0.0.0-20210718160520-38d29fabecb9
+## explicit
+github.com/hyperledger/fabric-chaincode-go/pkg/attrmgr
+github.com/hyperledger/fabric-chaincode-go/pkg/cid
+github.com/hyperledger/fabric-chaincode-go/shim
+github.com/hyperledger/fabric-chaincode-go/shim/internal
+# github.com/hyperledger/fabric-contract-api-go v1.1.1
+## explicit
+github.com/hyperledger/fabric-contract-api-go/contractapi
+github.com/hyperledger/fabric-contract-api-go/contractapi/utils
+github.com/hyperledger/fabric-contract-api-go/internal
+github.com/hyperledger/fabric-contract-api-go/internal/types
+github.com/hyperledger/fabric-contract-api-go/internal/utils
+github.com/hyperledger/fabric-contract-api-go/metadata
+github.com/hyperledger/fabric-contract-api-go/serializer
+# github.com/hyperledger/fabric-protos-go v0.0.0-20211006172752-14f4318ce71c
+## explicit
+github.com/hyperledger/fabric-protos-go/common
+github.com/hyperledger/fabric-protos-go/ledger/queryresult
+github.com/hyperledger/fabric-protos-go/ledger/rwset
+github.com/hyperledger/fabric-protos-go/msp
+github.com/hyperledger/fabric-protos-go/peer
+# github.com/joho/godotenv v1.3.0
+github.com/joho/godotenv
+# github.com/mailru/easyjson v0.0.0-20190626092158-b2ccc519800e
+github.com/mailru/easyjson/buffer
+github.com/mailru/easyjson/jlexer
+github.com/mailru/easyjson/jwriter
+# github.com/miekg/pkcs11 v1.1.1
+## explicit
 github.com/miekg/pkcs11
-# github.com/mitchellh/mapstructure v1.1.2
-github.com/mitchellh/mapstructure
-# github.com/morikuni/aec v0.0.0-20170113033406-39771216ff4c
-github.com/morikuni/aec
-# github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
-github.com/op/go-logging
-# github.com/opencontainers/go-digest v1.0.0-rc1
-github.com/opencontainers/go-digest
-# github.com/opencontainers/image-spec v1.0.1
-github.com/opencontainers/image-spec/specs-go
-github.com/opencontainers/image-spec/specs-go/v1
-# github.com/opencontainers/runc v0.1.1
-github.com/opencontainers/runc/libcontainer/system
-github.com/opencontainers/runc/libcontainer/user
-# github.com/pelletier/go-toml v1.2.0
-github.com/pelletier/go-toml
 # github.com/pkg/errors v0.9.1
+## explicit
 github.com/pkg/errors
-# github.com/sirupsen/logrus v1.4.2
-github.com/sirupsen/logrus
-# github.com/spf13/afero v1.1.2
-github.com/spf13/afero
-github.com/spf13/afero/mem
-# github.com/spf13/cast v1.3.0
-github.com/spf13/cast
-# github.com/spf13/jwalterweatherman v1.0.0
-github.com/spf13/jwalterweatherman
-# github.com/spf13/pflag v1.0.3
-github.com/spf13/pflag
-# github.com/spf13/viper v1.6.2
-github.com/spf13/viper
-# github.com/subosito/gotenv v1.2.0
-github.com/subosito/gotenv
-# github.com/sykesm/zap-logfmt v0.0.3
+# github.com/rogpeppe/go-internal v1.3.0
+github.com/rogpeppe/go-internal/modfile
+github.com/rogpeppe/go-internal/module
+github.com/rogpeppe/go-internal/semver
+# github.com/sykesm/zap-logfmt v0.0.4
+## explicit
 github.com/sykesm/zap-logfmt
-# go.uber.org/atomic v1.6.0
+# github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f
+github.com/xeipuuv/gojsonpointer
+# github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415
+github.com/xeipuuv/gojsonreference
+# github.com/xeipuuv/gojsonschema v1.2.0
+github.com/xeipuuv/gojsonschema
+# go.uber.org/atomic v1.7.0
 go.uber.org/atomic
-# go.uber.org/multierr v1.5.0
+# go.uber.org/multierr v1.6.0
 go.uber.org/multierr
-# go.uber.org/zap v1.14.1
+# go.uber.org/zap v1.20.0
+## explicit
 go.uber.org/zap
 go.uber.org/zap/buffer
 go.uber.org/zap/internal/bufferpool
@@ -161,33 +95,29 @@ go.uber.org/zap/internal/color
 go.uber.org/zap/internal/exit
 go.uber.org/zap/zapcore
 go.uber.org/zap/zapgrpc
-# golang.org/x/crypto v0.0.0-20200323165209-0ec3e9974c59
+# golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
 golang.org/x/crypto/sha3
-# golang.org/x/net v0.0.0-20190620200207-3b0461eec859
-golang.org/x/net/context
+# golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4
 golang.org/x/net/http/httpguts
 golang.org/x/net/http2
 golang.org/x/net/http2/hpack
 golang.org/x/net/idna
 golang.org/x/net/internal/timeseries
 golang.org/x/net/trace
-# golang.org/x/sync v0.0.0-20190423024810-112230192c58
-golang.org/x/sync/errgroup
-# golang.org/x/sys v0.0.0-20190916202348-b4ddaad3f8a3
+# golang.org/x/sys v0.0.0-20210510120138-977fb7262007
 golang.org/x/sys/cpu
+golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
-golang.org/x/sys/windows
-# golang.org/x/text v0.3.2
+# golang.org/x/text v0.3.3
 golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
-# google.golang.org/genproto v0.0.0-20190819201941-24fa4b261c55
+golang.org/x/text/width
+# google.golang.org/genproto v0.0.0-20180831171423-11092d34479b
 google.golang.org/genproto/googleapis/rpc/status
-# google.golang.org/grpc v1.28.0
+# google.golang.org/grpc v1.23.0
 google.golang.org/grpc
-google.golang.org/grpc/attributes
-google.golang.org/grpc/backoff
 google.golang.org/grpc/balancer
 google.golang.org/grpc/balancer/base
 google.golang.org/grpc/balancer/roundrobin
@@ -203,15 +133,10 @@ google.golang.org/grpc/internal
 google.golang.org/grpc/internal/backoff
 google.golang.org/grpc/internal/balancerload
 google.golang.org/grpc/internal/binarylog
-google.golang.org/grpc/internal/buffer
 google.golang.org/grpc/internal/channelz
 google.golang.org/grpc/internal/envconfig
-google.golang.org/grpc/internal/grpclog
 google.golang.org/grpc/internal/grpcrand
 google.golang.org/grpc/internal/grpcsync
-google.golang.org/grpc/internal/grpcutil
-google.golang.org/grpc/internal/resolver/dns
-google.golang.org/grpc/internal/resolver/passthrough
 google.golang.org/grpc/internal/syscall
 google.golang.org/grpc/internal/transport
 google.golang.org/grpc/keepalive
@@ -219,11 +144,43 @@ google.golang.org/grpc/metadata
 google.golang.org/grpc/naming
 google.golang.org/grpc/peer
 google.golang.org/grpc/resolver
+google.golang.org/grpc/resolver/dns
+google.golang.org/grpc/resolver/passthrough
 google.golang.org/grpc/serviceconfig
 google.golang.org/grpc/stats
 google.golang.org/grpc/status
 google.golang.org/grpc/tap
-# gopkg.in/ini.v1 v1.51.0
-gopkg.in/ini.v1
-# gopkg.in/yaml.v2 v2.2.4
+# google.golang.org/protobuf v1.26.0
+google.golang.org/protobuf/encoding/prototext
+google.golang.org/protobuf/encoding/protowire
+google.golang.org/protobuf/internal/descfmt
+google.golang.org/protobuf/internal/descopts
+google.golang.org/protobuf/internal/detrand
+google.golang.org/protobuf/internal/encoding/defval
+google.golang.org/protobuf/internal/encoding/messageset
+google.golang.org/protobuf/internal/encoding/tag
+google.golang.org/protobuf/internal/encoding/text
+google.golang.org/protobuf/internal/errors
+google.golang.org/protobuf/internal/filedesc
+google.golang.org/protobuf/internal/filetype
+google.golang.org/protobuf/internal/flags
+google.golang.org/protobuf/internal/genid
+google.golang.org/protobuf/internal/impl
+google.golang.org/protobuf/internal/order
+google.golang.org/protobuf/internal/pragma
+google.golang.org/protobuf/internal/set
+google.golang.org/protobuf/internal/strs
+google.golang.org/protobuf/internal/version
+google.golang.org/protobuf/proto
+google.golang.org/protobuf/reflect/protodesc
+google.golang.org/protobuf/reflect/protoreflect
+google.golang.org/protobuf/reflect/protoregistry
+google.golang.org/protobuf/runtime/protoiface
+google.golang.org/protobuf/runtime/protoimpl
+google.golang.org/protobuf/types/descriptorpb
+google.golang.org/protobuf/types/known/anypb
+google.golang.org/protobuf/types/known/durationpb
+google.golang.org/protobuf/types/known/emptypb
+google.golang.org/protobuf/types/known/timestamppb
+# gopkg.in/yaml.v2 v2.2.8
 gopkg.in/yaml.v2

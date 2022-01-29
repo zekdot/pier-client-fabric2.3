@@ -4,49 +4,48 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"strconv"
-
 	"github.com/golang/protobuf/proto"
-	"github.com/hyperledger/fabric/core/chaincode/shim"
-	pb "github.com/hyperledger/fabric/protos/peer"
+	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+	pb "github.com/hyperledger/fabric-protos-go/peer"
+	"strconv"
 )
 
-type response struct {
+type Response struct {
 	OK      bool   `json:"ok"`
 	Message string `json:"message"`
 	Data    []byte `json:"data"`
 }
 
-func successResponse(data []byte) pb.Response {
-	res := &response{
+func successResponse(data []byte) *Response {
+	res := &Response{
 		OK:   true,
 		Data: data,
 	}
 
-	data, err := json.Marshal(res)
-	if err != nil {
-		panic(err)
-	}
+	//data, err := json.Marshal(res)
+	//if err != nil {
+	//	panic(err)
+	//}
 
-	return shim.Success(data)
+	return res
 }
 
-func errorResponse(msg string) pb.Response {
-	res := &response{
+func errorResponse(msg string) *Response {
+	res := &Response{
 		OK:      false,
 		Message: msg,
 	}
 
-	data, err := json.Marshal(res)
-	if err != nil {
-		panic(err)
-	}
+	//data, err := json.Marshal(res)
+	//if err != nil {
+	//	panic(err)
+	//}
 
-	return shim.Success(data)
+	return res
 }
 
 // putMap for persisting meta state into ledger
-func (broker *Broker) putMap(stub shim.ChaincodeStubInterface, metaName string, meta map[string]uint64) error {
+func (broker *Broker) putMap(ctx contractapi.TransactionContextInterface, metaName string, meta map[string]uint64) error {
 	if meta == nil {
 		return nil
 	}
@@ -56,11 +55,11 @@ func (broker *Broker) putMap(stub shim.ChaincodeStubInterface, metaName string, 
 		return err
 	}
 
-	return stub.PutState(metaName, metaBytes)
+	return ctx.GetStub().PutState(metaName, metaBytes)
 }
 
-func (broker *Broker) getMap(stub shim.ChaincodeStubInterface, metaName string) (map[string]uint64, error) {
-	metaBytes, err := stub.GetState(metaName)
+func (broker *Broker) getMap(ctx contractapi.TransactionContextInterface, metaName string) (map[string]uint64, error) {
+	metaBytes, err := ctx.GetStub().GetState(metaName)
 	if err != nil {
 		return nil, err
 	}
@@ -76,8 +75,8 @@ func (broker *Broker) getMap(stub shim.ChaincodeStubInterface, metaName string) 
 	return meta, nil
 }
 
-func getChaincodeID(stub shim.ChaincodeStubInterface) (string, error) {
-	sp, err := stub.GetSignedProposal()
+func getChaincodeID(ctx contractapi.TransactionContextInterface) (string, error) {
+	sp, err := ctx.GetStub().GetSignedProposal()
 	if err != nil {
 		return "", err
 	}
@@ -97,19 +96,19 @@ func getChaincodeID(stub shim.ChaincodeStubInterface) (string, error) {
 		return "", err
 	}
 
-	return getKey(stub.GetChannelID(), spec.ChaincodeSpec.ChaincodeId.Name), nil
+	return getKey(ctx.GetStub().GetChannelID(), spec.ChaincodeSpec.ChaincodeId.Name), nil
 }
 
 func getKey(channel, chaincodeName string) string {
 	return channel + delimiter + chaincodeName
 }
 
-func (broker *Broker) checkIndex(stub shim.ChaincodeStubInterface, addr string, index string, metaName string) error {
+func (broker *Broker) checkIndex(ctx contractapi.TransactionContextInterface, addr string, index string, metaName string) error {
 	idx, err := strconv.ParseUint(index, 10, 64)
 	if err != nil {
 		return err
 	}
-	meta, err := broker.getMap(stub, metaName)
+	meta, err := broker.getMap(ctx, metaName)
 	if err != nil {
 		return err
 	}
@@ -127,44 +126,10 @@ func (broker *Broker) inMsgKey(from string, idx string) string {
 	return fmt.Sprintf("in-msg-%s-%s", from, idx)
 }
 
-func (broker *Broker) onlyAdmin(stub shim.ChaincodeStubInterface) bool {
-	key, err := getChaincodeID(stub)
+func (broker *Broker) getList(ctx contractapi.TransactionContextInterface) *Response {
+	whiteList, err := broker.getMap(ctx, whiteList)
 	if err != nil {
-		fmt.Printf("Get cert public key %s\n", err.Error())
-		return false
-	}
-	adminList, err := broker.getMap(stub, adminList)
-	if err != nil {
-		fmt.Println("Get admin list info failed")
-		return false
-	}
-	if adminList[key] == 1 {
-		return false
-	}
-	return true
-}
-
-func (broker *Broker) onlyWhitelist(stub shim.ChaincodeStubInterface) bool {
-	key, err := getChaincodeID(stub)
-	if err != nil {
-		fmt.Printf("Get cert public key %s\n", err.Error())
-		return false
-	}
-	whiteList, err := broker.getMap(stub, whiteList)
-	if err != nil {
-		fmt.Println("Get white list info failed")
-		return false
-	}
-	if whiteList[key] != 1 {
-		return false
-	}
-	return true
-}
-
-func (broker *Broker) getList(stub shim.ChaincodeStubInterface) pb.Response {
-	whiteList, err := broker.getMap(stub, whiteList)
-	if err != nil {
-		return shim.Error(fmt.Sprintf("Get white list :%s", err.Error()))
+		return errorResponse(fmt.Sprintf("Get white list :%s", err.Error()))
 	}
 	var list [][]byte
 	for k, v := range whiteList {
@@ -172,35 +137,5 @@ func (broker *Broker) getList(stub shim.ChaincodeStubInterface) pb.Response {
 			list = append(list, []byte(k))
 		}
 	}
-	return shim.Success(bytes.Join(list, []byte(",")))
-}
-
-func (broker *Broker) checkAdmin(stub shim.ChaincodeStubInterface, function string) bool {
-	checks := map[string]struct{}{
-		"audit":             {},
-		"interchainCharge":  {},
-		"interchainConfirm": {},
-		"interchainGet":     {},
-		"interchainSet":     {},
-	}
-
-	if _, ok := checks[function]; !ok {
-		return true
-	}
-
-	return broker.onlyAdmin(stub)
-}
-
-func (broker *Broker) checkWhitelist(stub shim.ChaincodeStubInterface, function string) bool {
-	checks := map[string]struct{}{
-		"InterchainTransferInvoke": {},
-		"InterchainDataSwapInvoke": {},
-		"InterchainInvoke":         {},
-	}
-
-	if _, ok := checks[function]; !ok {
-		return true
-	}
-
-	return broker.onlyWhitelist(stub)
+	return successResponse(bytes.Join(list, []byte(",")))
 }

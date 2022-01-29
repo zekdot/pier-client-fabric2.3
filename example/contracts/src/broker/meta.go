@@ -1,82 +1,71 @@
 package main
 
 import (
-	"github.com/hyperledger/fabric/core/chaincode/shim"
-	pb "github.com/hyperledger/fabric/protos/peer"
+	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
 // getOutMeta
-func (broker *Broker) getOuterMeta(stub shim.ChaincodeStubInterface) pb.Response {
-	v, err := stub.GetState(outterMeta)
+func (broker *Broker) GetOuterMeta(ctx contractapi.TransactionContextInterface)  (map[string]uint64, error)  {
+	meta, err := broker.getMap(ctx, outterMeta)
 	if err != nil {
-		return shim.Error(err.Error())
+		return nil, err
 	}
-	return shim.Success(v)
+	return meta, nil
+}
+
+func (broker *Broker) GetInnerMeta(ctx contractapi.TransactionContextInterface) (map[string]uint64, error) {
+	meta, err := broker.getMap(ctx, innerMeta)
+	if err != nil {
+		return nil, err
+	}
+	return meta, nil
+}
+
+func (broker *Broker) GetCallbackMeta(ctx contractapi.TransactionContextInterface) (map[string]uint64, error) {
+	meta, err := broker.getMap(ctx, callbackMeta)
+	if err != nil {
+		return nil, err
+	}
+	return meta, nil
 }
 
 // getOutMessage to,index
-func (broker *Broker) getOutMessage(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-	if len(args) < 2 {
-		return shim.Error("incorrect number of arguments, expecting 2")
-	}
-	destChainID := args[0]
-	sequenceNum := args[1]
+func (broker *Broker) GetOutMessage(ctx contractapi.TransactionContextInterface, destChainID string, sequenceNum string) *Response {
 	key := broker.outMsgKey(destChainID, sequenceNum)
-	v, err := stub.GetState(key)
+	v, err := ctx.GetStub().GetState(key)
 	if err != nil {
-		return shim.Error(err.Error())
+		return errorResponse(err.Error())
 	}
-	return shim.Success(v)
-}
-
-func (broker *Broker) getInnerMeta(stub shim.ChaincodeStubInterface) pb.Response {
-	v, err := stub.GetState(innerMeta)
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-	return shim.Success(v)
+	return successResponse(v)
 }
 
 // getInMessage from,index
-func (broker *Broker) getInMessage(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-	if len(args) < 2 {
-		return shim.Error("incorrect number of arguments, expecting 2")
-	}
-	sourceChainID := args[0]
-	sequenceNum := args[1]
+func (broker *Broker) GetInMessage(ctx contractapi.TransactionContextInterface, sourceChainID string, sequenceNum string) *Response {
 	key := broker.inMsgKey(sourceChainID, sequenceNum)
-	v, err := stub.GetState(key)
+	v, err := ctx.GetStub().GetState(key)
 	if err != nil {
-		return shim.Error(err.Error())
+		return errorResponse(err.Error())
 	}
-	return shim.Success(v)
+	return successResponse(v)
 }
 
-func (broker *Broker) getCallbackMeta(stub shim.ChaincodeStubInterface) pb.Response {
-	v, err := stub.GetState(callbackMeta)
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-	return shim.Success(v)
-}
-
-func (broker *Broker) markInCounter(stub shim.ChaincodeStubInterface, from string) error {
-	inMeta, err := broker.getMap(stub, innerMeta)
+func (broker *Broker) markInCounter(ctx contractapi.TransactionContextInterface, from string) error {
+	inMeta, err := broker.getMap(ctx, innerMeta)
 	if err != nil {
 		return err
 	}
 
 	inMeta[from]++
-	return broker.putMap(stub, innerMeta, inMeta)
+	return broker.putMap(ctx, innerMeta, inMeta)
 }
 
-func (broker *Broker) markCallbackCounter(stub shim.ChaincodeStubInterface, from string, index uint64) error {
-	meta, err := broker.getMap(stub, callbackMeta)
+func (broker *Broker) markCallbackCounter(ctx contractapi.TransactionContextInterface, from string, index uint64) error {
+	meta, err := broker.getMap(ctx, callbackMeta)
 	if err != nil {
 		return err
 	}
 
 	meta[from] = index
 
-	return broker.putMap(stub, callbackMeta, meta)
+	return broker.putMap(ctx, callbackMeta, meta)
 }

@@ -2,16 +2,16 @@ package main
 
 import (
 	"fmt"
+	"github.com/hyperledger/fabric-chaincode-go/shim"
 	"strconv"
 	"strings"
 
+	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/hyperledger/fabric/common/util"
-	"github.com/hyperledger/fabric/core/chaincode/shim"
-	pb "github.com/hyperledger/fabric/protos/peer"
 )
 
 // get interchain account for transfer contract: setData from,index,tid,name_id,amount
-func (broker *Broker) interchainSet(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+func (broker *Broker) interchainSet(ctx contractapi.TransactionContextInterface, args []string) *Response {
 	if len(args) < 5 {
 		return errorResponse("incorrect number of arguments, expecting 5")
 	}
@@ -22,7 +22,7 @@ func (broker *Broker) interchainSet(stub shim.ChaincodeStubInterface, args []str
 	key := args[3]
 	data := args[4]
 
-	if err := broker.checkIndex(stub, sourceChainID, sequenceNum, callbackMeta); err != nil {
+	if err := broker.checkIndex(ctx, sourceChainID, sequenceNum, callbackMeta); err != nil {
 		return errorResponse(err.Error())
 	}
 
@@ -30,7 +30,7 @@ func (broker *Broker) interchainSet(stub shim.ChaincodeStubInterface, args []str
 	if err != nil {
 		return errorResponse(err.Error())
 	}
-	if err := broker.markCallbackCounter(stub, sourceChainID, idx); err != nil {
+	if err := broker.markCallbackCounter(ctx, sourceChainID, idx); err != nil {
 		return errorResponse(err.Error())
 	}
 
@@ -40,7 +40,7 @@ func (broker *Broker) interchainSet(stub shim.ChaincodeStubInterface, args []str
 	}
 
 	b := util.ToChaincodeArgs("interchainSet", key, data)
-	response := stub.InvokeChaincode(splitedCID[1], b, splitedCID[0])
+	response := ctx.GetStub().InvokeChaincode(splitedCID[1], b, splitedCID[0])
 	if response.Status != shim.OK {
 		return errorResponse(fmt.Sprintf("invoke chaincode '%s' err: %s", splitedCID[1], response.Message))
 	}
@@ -49,7 +49,7 @@ func (broker *Broker) interchainSet(stub shim.ChaincodeStubInterface, args []str
 }
 
 // example for calling get: getData from,index,tid,id
-func (broker *Broker) interchainGet(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+func (broker *Broker) interchainGet(ctx contractapi.TransactionContextInterface, args []string) *Response {
 	if len(args) < 4 {
 		return errorResponse("incorrect number of arguments, expecting 4")
 	}
@@ -58,11 +58,11 @@ func (broker *Broker) interchainGet(stub shim.ChaincodeStubInterface, args []str
 	targetCID := args[2]
 	key := args[3]
 
-	if err := broker.checkIndex(stub, sourceChainID, sequenceNum, innerMeta); err != nil {
+	if err := broker.checkIndex(ctx, sourceChainID, sequenceNum, innerMeta); err != nil {
 		return errorResponse(err.Error())
 	}
 
-	if err := broker.markInCounter(stub, sourceChainID); err != nil {
+	if err := broker.markInCounter(ctx, sourceChainID); err != nil {
 		return errorResponse(err.Error())
 	}
 
@@ -72,13 +72,13 @@ func (broker *Broker) interchainGet(stub shim.ChaincodeStubInterface, args []str
 	}
 
 	b := util.ToChaincodeArgs("interchainGet", key)
-	response := stub.InvokeChaincode(splitedCID[1], b, splitedCID[0])
+	response := ctx.GetStub().InvokeChaincode(splitedCID[1], b, splitedCID[0])
 	if response.Status != shim.OK {
 		return errorResponse(fmt.Sprintf("invoke chaincode '%s' err: %s", splitedCID[1], response.Message))
 	}
 
 	inKey := broker.inMsgKey(sourceChainID, sequenceNum)
-	if err := stub.PutState(inKey, response.Payload); err != nil {
+	if err := ctx.GetStub().PutState(inKey, response.Payload); err != nil {
 		return errorResponse(err.Error())
 	}
 
