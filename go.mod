@@ -20,6 +20,10 @@ require (
 	github.com/meshplus/pier v0.0.0-00010101000000-000000000000
 	github.com/sirupsen/logrus v1.5.0
 	github.com/spf13/viper v1.6.1
+	github.com/hyperledger/fabric-sdk-go v1.0.0-rc1
+    	golang.org/x/net v0.0.0-20201021035429-f5854403a974 // indirect
+    	golang.org/x/sys v0.0.0-20210119212857-b64e53b001e4 // indirect
+    	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 )
 
 replace github.com/golang/protobuf => github.com/golang/protobuf v1.3.2

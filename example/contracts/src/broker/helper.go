@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/golang/protobuf/proto"
@@ -9,40 +8,6 @@ import (
 	pb "github.com/hyperledger/fabric-protos-go/peer"
 	"strconv"
 )
-
-type Response struct {
-	OK      bool   `json:"ok"`
-	Message string `json:"message"`
-	Data    []byte `json:"data"`
-}
-
-func successResponse(data []byte) *Response {
-	res := &Response{
-		OK:   true,
-		Data: data,
-	}
-
-	//data, err := json.Marshal(res)
-	//if err != nil {
-	//	panic(err)
-	//}
-
-	return res
-}
-
-func errorResponse(msg string) *Response {
-	res := &Response{
-		OK:      false,
-		Message: msg,
-	}
-
-	//data, err := json.Marshal(res)
-	//if err != nil {
-	//	panic(err)
-	//}
-
-	return res
-}
 
 // putMap for persisting meta state into ledger
 func (broker *Broker) putMap(ctx contractapi.TransactionContextInterface, metaName string, meta map[string]uint64) error {
@@ -75,6 +40,14 @@ func (broker *Broker) getMap(ctx contractapi.TransactionContextInterface, metaNa
 	return meta, nil
 }
 
+func outMsgKey(to string, idx string) string {
+	return fmt.Sprintf("out-msg-%s-%s", to, idx)
+}
+
+func inMsgKey(from string, idx string) string {
+	return fmt.Sprintf("in-msg-%s-%s", from, idx)
+}
+
 func getChaincodeID(ctx contractapi.TransactionContextInterface) (string, error) {
 	sp, err := ctx.GetStub().GetSignedProposal()
 	if err != nil {
@@ -96,10 +69,10 @@ func getChaincodeID(ctx contractapi.TransactionContextInterface) (string, error)
 		return "", err
 	}
 
-	return getKey(ctx.GetStub().GetChannelID(), spec.ChaincodeSpec.ChaincodeId.Name), nil
+	return chaincodeKey(ctx.GetStub().GetChannelID(), spec.ChaincodeSpec.ChaincodeId.Name), nil
 }
 
-func getKey(channel, chaincodeName string) string {
+func chaincodeKey(channel, chaincodeName string) string {
 	return channel + delimiter + chaincodeName
 }
 
@@ -118,18 +91,11 @@ func (broker *Broker) checkIndex(ctx contractapi.TransactionContextInterface, ad
 	return nil
 }
 
-func (broker *Broker) outMsgKey(to string, idx string) string {
-	return fmt.Sprintf("out-msg-%s-%s", to, idx)
-}
-
-func (broker *Broker) inMsgKey(from string, idx string) string {
-	return fmt.Sprintf("in-msg-%s-%s", from, idx)
-}
-
-func (broker *Broker) getList(ctx contractapi.TransactionContextInterface) *Response {
+func (broker *Broker) getList(ctx contractapi.TransactionContextInterface) ([][]byte, error) {
 	whiteList, err := broker.getMap(ctx, whiteList)
 	if err != nil {
-		return errorResponse(fmt.Sprintf("Get white list :%s", err.Error()))
+		return nil, err
+		//return errorResponse(fmt.Sprintf("Get white list :%s", err.Error()))
 	}
 	var list [][]byte
 	for k, v := range whiteList {
@@ -137,5 +103,6 @@ func (broker *Broker) getList(ctx contractapi.TransactionContextInterface) *Resp
 			list = append(list, []byte(k))
 		}
 	}
-	return successResponse(bytes.Join(list, []byte(",")))
+	return list, nil
+	//return successResponse(bytes.Join(list, []byte(",")))
 }

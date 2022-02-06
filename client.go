@@ -22,6 +22,7 @@ import (
 	"github.com/meshplus/pier/pkg/model"
 	"github.com/meshplus/pier/pkg/plugins/client"
 	"github.com/sirupsen/logrus"
+	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
 )
 
 var logger = log.NewWithModule("client")
@@ -55,6 +56,7 @@ type Client struct {
 	outMeta  map[string]uint64
 	ticker   *time.Ticker
 	done     chan bool
+	contract *gateway.Contract
 }
 
 func NewClient(configPath, pierId string, extra []byte) (client.Client, error) {
@@ -121,6 +123,9 @@ func (c *Client) polling() {
 				}).Error("Marshal outMeta of plugin")
 				continue
 			}
+			// key point, using fabric2.0 way
+			// TODO figure out how we get customed structure data
+			//result, err := c.contract.EvaluateTransaction(PollingEventMethod)
 			request := channel.Request{
 				ChaincodeID: c.meta.CCID,
 				Fcn:         PollingEventMethod,

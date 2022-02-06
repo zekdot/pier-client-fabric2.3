@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
@@ -29,24 +30,45 @@ func (broker *Broker) GetCallbackMeta(ctx contractapi.TransactionContextInterfac
 	return meta, nil
 }
 
+// TODO modify return type to Event
 // getOutMessage to,index
-func (broker *Broker) GetOutMessage(ctx contractapi.TransactionContextInterface, destChainID string, sequenceNum string) *Response {
-	key := broker.outMsgKey(destChainID, sequenceNum)
+func (broker *Broker) GetOutMessage(ctx contractapi.TransactionContextInterface, destChainID string, sequenceNum string) (string, error) {
+	key := outMsgKey(destChainID, sequenceNum)
 	v, err := ctx.GetStub().GetState(key)
 	if err != nil {
-		return errorResponse(err.Error())
+		return "", err
 	}
-	return successResponse(v)
+	if v == nil {
+		return "", nil
+	}
+	var res string
+	err = json.Unmarshal(v, res)
+	if err != nil {
+		return "", err
+	}
+	return res, nil
+	//if err != nil {
+	//	return errorResponse(err.Error())
+	//}
+	//return successResponse(v)
 }
 
 // getInMessage from,index
-func (broker *Broker) GetInMessage(ctx contractapi.TransactionContextInterface, sourceChainID string, sequenceNum string) *Response {
-	key := broker.inMsgKey(sourceChainID, sequenceNum)
+func (broker *Broker) GetInMessage(ctx contractapi.TransactionContextInterface, sourceChainID string, sequenceNum string) (string, error) {
+	key := inMsgKey(sourceChainID, sequenceNum)
 	v, err := ctx.GetStub().GetState(key)
 	if err != nil {
-		return errorResponse(err.Error())
+		return "", err
 	}
-	return successResponse(v)
+	if v == nil {
+		return "", nil
+	}
+	var res string
+	err = json.Unmarshal(v, res)
+	if err != nil {
+		return "", err
+	}
+	return res, nil
 }
 
 func (broker *Broker) markInCounter(ctx contractapi.TransactionContextInterface, from string) error {
