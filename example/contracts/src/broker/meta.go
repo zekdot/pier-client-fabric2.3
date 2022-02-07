@@ -30,21 +30,17 @@ func (broker *Broker) GetCallbackMeta(ctx contractapi.TransactionContextInterfac
 	return meta, nil
 }
 
-// TODO modify return type to Event
 // getOutMessage to,index
-func (broker *Broker) GetOutMessage(ctx contractapi.TransactionContextInterface, destChainID string, sequenceNum string) (string, error) {
+func (broker *Broker) GetOutMessage(ctx contractapi.TransactionContextInterface, destChainID string, sequenceNum string) (*Event, error) {
 	key := outMsgKey(destChainID, sequenceNum)
 	v, err := ctx.GetStub().GetState(key)
-	if err != nil {
-		return "", err
+	if err != nil || v == nil {
+		return nil, err
 	}
-	if v == nil {
-		return "", nil
-	}
-	var res string
+	res := &Event{}
 	err = json.Unmarshal(v, res)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	return res, nil
 	//if err != nil {
@@ -54,19 +50,16 @@ func (broker *Broker) GetOutMessage(ctx contractapi.TransactionContextInterface,
 }
 
 // getInMessage from,index
-func (broker *Broker) GetInMessage(ctx contractapi.TransactionContextInterface, sourceChainID string, sequenceNum string) (string, error) {
+func (broker *Broker) GetInMessage(ctx contractapi.TransactionContextInterface, sourceChainID string, sequenceNum string) (*Event, error) {
 	key := inMsgKey(sourceChainID, sequenceNum)
 	v, err := ctx.GetStub().GetState(key)
-	if err != nil {
-		return "", err
+	if err != nil || v == nil {
+		return nil, err
 	}
-	if v == nil {
-		return "", nil
-	}
-	var res string
+	res := &Event{}
 	err = json.Unmarshal(v, res)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	return res, nil
 }
