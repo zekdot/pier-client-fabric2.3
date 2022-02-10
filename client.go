@@ -9,12 +9,12 @@ import (
 
 	"github.com/Rican7/retry"
 	"github.com/Rican7/retry/strategy"
-	"github.com/golang/protobuf/proto"
+	//"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-chaincode-go/shim"
-	"github.com/hyperledger/fabric-protos-go/common"
-	"github.com/hyperledger/fabric-protos-go/peer"
+	//"github.com/hyperledger/fabric-protos-go/common"
+	//"github.com/hyperledger/fabric-protos-go/peer"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
-	"github.com/hyperledger/fabric-sdk-go/pkg/client/ledger"
+	//"github.com/hyperledger/fabric-sdk-go/pkg/client/ledger"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric/common/util"
 	"github.com/meshplus/bitxhub-kit/log"
@@ -30,12 +30,12 @@ var logger = log.NewWithModule("client")
 var _ client.Client = (*Client)(nil)
 
 const (
-	GetInnerMetaMethod    = "getInnerMeta"    // get last index of each source chain executing tx
-	GetOutMetaMethod      = "getOuterMeta"    // get last index of each receiving chain crosschain event
-	GetCallbackMetaMethod = "getCallbackMeta" // get last index of each receiving chain callback tx
-	GetInMessageMethod    = "getInMessage"
-	GetOutMessageMethod   = "getOutMessage"
-	PollingEventMethod    = "pollingEvent"
+	GetInnerMetaMethod    = "GetInnerMeta"    // get last index of each source chain executing tx
+	GetOutMetaMethod      = "GetOuterMeta"    // get last index of each receiving chain crosschain event
+	GetCallbackMetaMethod = "GetCallbackMeta" // get last index of each receiving chain callback tx
+	GetInMessageMethod    = "GetInMessage"
+	GetOutMessageMethod   = "GetOutMessage"
+	PollingEventMethod    = "PollingEvent"
 	FabricType            = "fabric"
 )
 
@@ -144,10 +144,10 @@ func (c *Client) polling() {
 				continue
 			}
 
-			proof, err := c.getProof(response)
-			if err != nil {
-				continue
-			}
+			//proof, err := c.getProof(response)
+			//if err != nil {
+			//	continue
+			//}
 
 			evs := make([]*Event, 0)
 			if err := json.Unmarshal(response.Payload, &evs); err != nil {
@@ -157,7 +157,7 @@ func (c *Client) polling() {
 				continue
 			}
 			for _, ev := range evs {
-				ev.Proof = proof
+				//ev.Proof = proof
 				c.eventC <- ev.Convert2IBTP(c.pierId, pb.IBTP_INTERCHAIN)
 				if c.outMeta == nil {
 					c.outMeta = make(map[string]uint64)
@@ -170,47 +170,47 @@ func (c *Client) polling() {
 		}
 	}
 }
-
-func (c *Client) getProof(response channel.Response) ([]byte, error) {
-	var proof []byte
-	var handle = func(response channel.Response) ([]byte, error) {
-		// query proof from fabric
-		l, err := ledger.New(c.consumer.channelProvider)
-		if err != nil {
-			return nil, err
-		}
-
-		t, err := l.QueryTransaction(response.TransactionID)
-		if err != nil {
-			return nil, err
-		}
-		pd := &common.Payload{}
-		if err := proto.Unmarshal(t.TransactionEnvelope.Payload, pd); err != nil {
-			return nil, err
-		}
-
-		pt := &peer.Transaction{}
-		if err := proto.Unmarshal(pd.Data, pt); err != nil {
-			return nil, err
-		}
-
-		return pt.Actions[0].Payload, nil
-	}
-
-	if err := retry.Retry(func(attempt uint) error {
-		var err error
-		proof, err = handle(response)
-		if err != nil {
-			logger.Errorf("can't get proof: %s", err.Error())
-			return err
-		}
-		return nil
-	}, strategy.Wait(2*time.Second)); err != nil {
-		logger.Panicf("can't get proof: %s", err.Error())
-	}
-
-	return proof, nil
-}
+//
+//func (c *Client) getProof(response channel.Response) ([]byte, error) {
+//	var proof []byte
+//	var handle = func(response channel.Response) ([]byte, error) {
+//		// query proof from fabric
+//		l, err := ledger.New(c.consumer.channelProvider)
+//		if err != nil {
+//			return nil, err
+//		}
+//
+//		t, err := l.QueryTransaction(response.TransactionID)
+//		if err != nil {
+//			return nil, err
+//		}
+//		pd := &common.Payload{}
+//		if err := proto.Unmarshal(t.TransactionEnvelope.Payload, pd); err != nil {
+//			return nil, err
+//		}
+//
+//		pt := &peer.Transaction{}
+//		if err := proto.Unmarshal(pd.Data, pt); err != nil {
+//			return nil, err
+//		}
+//
+//		return pt.Actions[0].Payload, nil
+//	}
+//
+//	if err := retry.Retry(func(attempt uint) error {
+//		var err error
+//		proof, err = handle(response)
+//		if err != nil {
+//			logger.Errorf("can't get proof: %s", err.Error())
+//			return err
+//		}
+//		return nil
+//	}, strategy.Wait(2*time.Second)); err != nil {
+//		logger.Panicf("can't get proof: %s", err.Error())
+//	}
+//
+//	return proof, nil
+//}
 
 func (c *Client) Stop() error {
 	c.ticker.Stop()
@@ -341,48 +341,42 @@ func (c *Client) GetInMessage(from string, index uint64) ([][]byte, error) {
 }
 
 func (c *Client) GetInMeta() (map[string]uint64, error) {
-	request := channel.Request{
-		ChaincodeID: c.meta.CCID,
-		Fcn:         GetInnerMetaMethod,
-	}
-
-	var response channel.Response
-	response, err := c.consumer.ChannelClient.Execute(request)
+	result, err := c.contract.EvaluateTransaction(GetInnerMetaMethod)
 	if err != nil {
 		return nil, err
 	}
-
-	return c.unpackMap(response)
+	m := make(map[string]uint64)
+	err = json.Unmarshal(result, &m)
+	if err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 func (c *Client) GetOutMeta() (map[string]uint64, error) {
-	request := channel.Request{
-		ChaincodeID: c.meta.CCID,
-		Fcn:         GetOutMetaMethod,
-	}
-
-	var response channel.Response
-	response, err := c.consumer.ChannelClient.Execute(request)
+	result, err := c.contract.EvaluateTransaction(GetOutMetaMethod)
 	if err != nil {
 		return nil, err
 	}
-
-	return c.unpackMap(response)
+	m := make(map[string]uint64)
+	err = json.Unmarshal(result, &m)
+	if err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 func (c Client) GetCallbackMeta() (map[string]uint64, error) {
-	request := channel.Request{
-		ChaincodeID: c.meta.CCID,
-		Fcn:         GetCallbackMetaMethod,
-	}
-
-	var response channel.Response
-	response, err := c.consumer.ChannelClient.Execute(request)
+	result, err := c.contract.EvaluateTransaction(GetCallbackMetaMethod)
 	if err != nil {
 		return nil, err
 	}
-
-	return c.unpackMap(response)
+	m := make(map[string]uint64)
+	err = json.Unmarshal(result, &m)
+	if err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 func (c *Client) CommitCallback(ibtp *pb.IBTP) error {

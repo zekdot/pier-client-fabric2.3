@@ -44,7 +44,7 @@ func (s *DataSwapper) Get(ctx contractapi.TransactionContextInterface) (string, 
 			return "", fmt.Errorf("invoke broker chaincode %s error: %s", brokerContractName, response.Message)
 		}
 
-		return "", nil
+		return response.Message, nil
 	default:
 		return "", fmt.Errorf("incorrect number of arguments")
 	}
