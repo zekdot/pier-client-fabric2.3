@@ -86,27 +86,22 @@ func (broker *Broker) InterchainTransferInvoke(ctx contractapi.TransactionContex
 	newArgs := make([]string, 0)
 	newArgs = append(newArgs, args[0], cid, args[1], "interchainCharge", strings.Join(args[2:], ","), "interchainConfirm")
 
-	return broker.interchainInvoke(ctx, newArgs)
+	return broker.InterchainInvoke(ctx, newArgs)
 }
 
-func (broker *Broker) InterchainDataSwapInvoke(ctx contractapi.TransactionContextInterface) error {
+func (broker *Broker) InterchainDataSwapInvoke(ctx contractapi.TransactionContextInterface,
+	toId string, contractId string, key string) error {
 	_, args := ctx.GetStub().GetFunctionAndParameters()
 	//_, args := stub.GetFunctionAndParameters()
 	if len(args) < 3 {
 		//return errorResponse("incorrect number of arguments, expecting 5"), nil
 		return fmt.Errorf("incorrect number of arguments, expecting 3")
 	}
-	toId := args[0]
-	contractId := args[1]
-	key := args[2]
+	//toId := args[0]
+	//contractId := args[1]
+	//key := args[2]
 	cid, err := getChaincodeID(ctx)
-	//value, _ := stub.GetState("key1")
-	//if err == nil {
-	//
-	//}
-	//value, _ := ctx.GetStub().GetState("key1")
-	//
-	//return fmt.Errorf("get cid %s, toId %s, contractId %s, key %s, value is %s", cid, toId, contractId, key, string(value))
+
 	if err != nil {
 		return err
 	}
@@ -115,7 +110,7 @@ func (broker *Broker) InterchainDataSwapInvoke(ctx contractapi.TransactionContex
 	// to fromid toid func args callback
 	newArgs = append(newArgs, toId, cid, contractId, "interchainGet", key, "interchainSet")
 
-	return broker.interchainInvoke(ctx, newArgs)
+	return broker.InterchainInvoke(ctx, newArgs)
 }
 
 // InterchainInvoke
@@ -125,7 +120,7 @@ func (broker *Broker) InterchainDataSwapInvoke(ctx contractapi.TransactionContex
 // string func,
 // string args,
 // string callback;
-func (broker *Broker) interchainInvoke(ctx contractapi.TransactionContextInterface, args[] string) error {
+func (broker *Broker) InterchainInvoke(ctx contractapi.TransactionContextInterface, args[] string) error {
 	//_, args := ctx.GetStub().GetFunctionAndParameters()
 	if len(args) < 6 {
 		return fmt.Errorf("incorrect number of arguments, expecting 6")
@@ -163,24 +158,18 @@ func (broker *Broker) interchainInvoke(ctx contractapi.TransactionContextInterfa
 		//return shim.Error(err.Error())
 		return err
 	}
+	key := outMsgKey(tx.DstChainID, strconv.FormatUint(tx.Index, 10))
+	if err := ctx.GetStub().PutState(key, txValue); err != nil {
+		//return shim.Error(fmt.Errorf("persist event: %w", err).Error())
+		return err
+	}
 
-	value, _ := ctx.GetStub().GetState("key1")
-	outm, _ := json.Marshal(outMeta)
+	if err := ctx.GetStub().SetEvent(interchainEventName, txValue); err != nil {
+		//return shim.Error(fmt.Errorf("set event: %w", err).Error())
+		return err
+	}
 
-	return fmt.Errorf("get event:%s, get value is %s, outMeta is %s", string(txValue), string(value), string(outm))
-	// persist out message
-	//key := outMsgKey(tx.DstChainID, strconv.FormatUint(tx.Index, 10))
-	//if err := ctx.GetStub().PutState(key, txValue); err != nil {
-	//	//return shim.Error(fmt.Errorf("persist event: %w", err).Error())
-	//	return err
-	//}
-	//
-	//if err := ctx.GetStub().SetEvent(interchainEventName, txValue); err != nil {
-	//	//return shim.Error(fmt.Errorf("set event: %w", err).Error())
-	//	return err
-	//}
-	//
-	//return nil //shim.Success(nil)
+	return nil //shim.Success(nil)
 }
 
 // polling m(m is the out meta plugin has received. transfer them into string to pass. structure is map[string]uint64

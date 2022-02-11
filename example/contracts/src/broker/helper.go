@@ -106,3 +106,11 @@ func (broker *Broker) getList(ctx contractapi.TransactionContextInterface) ([][]
 	return list, nil
 	//return successResponse(bytes.Join(list, []byte(",")))
 }
+
+func toChaincodeArgs(args ...string) [][]byte {
+	bargs := make([][]byte, len(args))
+	for i, arg := range args {
+		bargs[i] = []byte(arg)
+	}
+	return bargs
+}
