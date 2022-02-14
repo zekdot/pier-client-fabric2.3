@@ -3,26 +3,28 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Rican7/retry"
 	"github.com/Rican7/retry/strategy"
-	//"github.com/golang/protobuf/proto"
-	"github.com/hyperledger/fabric-chaincode-go/shim"
+
 	//"github.com/hyperledger/fabric-protos-go/common"
 	//"github.com/hyperledger/fabric-protos-go/peer"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
 	//"github.com/hyperledger/fabric-sdk-go/pkg/client/ledger"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
-	"github.com/hyperledger/fabric/common/util"
+	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
 	"github.com/meshplus/bitxhub-kit/log"
 	"github.com/meshplus/bitxhub-model/pb"
 	"github.com/meshplus/pier/pkg/model"
 	"github.com/meshplus/pier/pkg/plugins/client"
 	"github.com/sirupsen/logrus"
-	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
 )
 
 var logger = log.NewWithModule("client")
@@ -36,7 +38,7 @@ const (
 	GetInMessageMethod    = "GetInMessage"
 	GetOutMessageMethod   = "GetOutMessage"
 	PollingEventMethod    = "PollingEvent"
-	FabricType            = "fabric"
+	FabricType            = "fabric2.0"
 )
 
 type ContractMeta struct {
@@ -48,8 +50,8 @@ type ContractMeta struct {
 }
 
 type Client struct {
-	meta     *ContractMeta
-	consumer *Consumer
+	//meta     *ContractMeta
+	//consumer *Consumer
 	eventC   chan *pb.IBTP
 	pierId   string
 	name     string
@@ -60,19 +62,10 @@ type Client struct {
 }
 
 func NewClient(configPath, pierId string, extra []byte) (client.Client, error) {
-	eventC := make(chan *pb.IBTP)
+	// read config of fabric
 	fabricConfig, err := UnmarshalConfig(configPath)
-	if err != nil {
-		return nil, fmt.Errorf("unmarshal config for plugin :%w", err)
-	}
 
-	c := &ContractMeta{
-		EventFilter: fabricConfig.EventFilter,
-		Username:    fabricConfig.Username,
-		CCID:        fabricConfig.CCID,
-		ChannelID:   fabricConfig.ChannelId,
-		ORG:         fabricConfig.Org,
-	}
+	eventC := make(chan *pb.IBTP)
 
 	m := make(map[string]uint64)
 	if err := json.Unmarshal(extra, &m); err != nil {
@@ -82,33 +75,102 @@ func NewClient(configPath, pierId string, extra []byte) (client.Client, error) {
 		m = make(map[string]uint64)
 	}
 
-	mgh, err := newFabricHandler(c.EventFilter, eventC, pierId)
+	done := make(chan bool)
+
+	err = os.Setenv("DISCOVERY_AS_LOCALHOST", "true")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error setting DISCOVERY_AS_LOCALHOST environemnt variable: %v", err)
+	}
+	wallet, err := gateway.NewFileSystemWallet("wallet")
+	if err != nil {
+		return nil, fmt.Errorf("Failed to create wallet: %v", err)
 	}
 
-	done := make(chan bool)
-	csm, err := NewConsumer(configPath, c, mgh, done)
-	if err != nil {
-		return nil, err
+	if !wallet.Exists(fabricConfig.Username) {
+		err = populateWallet(wallet, fabricConfig.OrganizationsPath, fabricConfig.Username)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to populate wallet contents: %v", err)
+		}
 	}
+
+	ccpPath := filepath.Join(
+		fabricConfig.OrganizationsPath,
+		"peerOrganizations",
+		"org1.example.com",
+		"connection-org1.yaml",
+	)
+
+	gw, err := gateway.Connect(
+		gateway.WithConfig(config.FromFile(filepath.Clean(ccpPath))),
+		gateway.WithIdentity(wallet, fabricConfig.Username),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to connect to gateway: %v", err)
+	}
+	defer gw.Close()
+
+	network, err := gw.GetNetwork(fabricConfig.ChannelId)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get network: %v", err)
+	}
+
+	contract := network.GetContract(fabricConfig.CCID)
 
 	return &Client{
-		consumer: csm,
+		//consumer: csm,
 		eventC:   eventC,
-		meta:     c,
+		//meta:     c,
 		pierId:   pierId,
 		name:     fabricConfig.Name,
 		outMeta:  m,
 		ticker:   time.NewTicker(2 * time.Second),
 		done:     done,
+		contract: contract,
 	}, nil
+}
+
+func populateWallet(wallet *gateway.Wallet, organizationsPath string, username string) error {
+	credPath := filepath.Join(
+		organizationsPath,
+		"peerOrganizations",
+		"org1.example.com",
+		"users",
+		"User1@org1.example.com",
+		"msp",
+	)
+
+	certPath := filepath.Join(credPath, "signcerts", "User1@org1.example.com-cert.pem")
+	// read the certificate pem
+	cert, err := ioutil.ReadFile(filepath.Clean(certPath))
+	if err != nil {
+		return err
+	}
+
+	keyDir := filepath.Join(credPath, "keystore")
+	// there's a single file in this dir containing the private key
+	files, err := ioutil.ReadDir(keyDir)
+	if err != nil {
+		return err
+	}
+	if len(files) != 1 {
+		return fmt.Errorf("keystore folder should have contain one file")
+	}
+	keyPath := filepath.Join(keyDir, files[0].Name())
+	key, err := ioutil.ReadFile(filepath.Clean(keyPath))
+	if err != nil {
+		return err
+	}
+
+	identity := gateway.NewX509Identity("Org1MSP", string(cert), string(key))
+
+	return wallet.Put(username, identity)
 }
 
 func (c *Client) Start() error {
 	logger.Info("Fabric consumer started")
 	go c.polling()
-	return c.consumer.Start()
+	//return c.consumer.Start()
+	return nil;
 }
 
 // polling event from broker
@@ -123,24 +185,15 @@ func (c *Client) polling() {
 				}).Error("Marshal outMeta of plugin")
 				continue
 			}
-			// key point, using fabric2.0 way
-			// TODO figure out how we get customed structure data
-			//result, err := c.contract.EvaluateTransaction(PollingEventMethod)
-			request := channel.Request{
-				ChaincodeID: c.meta.CCID,
-				Fcn:         PollingEventMethod,
-				Args:        [][]byte{args},
-			}
+			result, err := c.contract.EvaluateTransaction(PollingEventMethod, string(args))
 
-			var response channel.Response
-			response, err = c.consumer.ChannelClient.Execute(request)
 			if err != nil {
 				logger.WithFields(logrus.Fields{
 					"error": err.Error(),
 				}).Error("Polling events from contract")
 				continue
 			}
-			if response.Payload == nil {
+			if result == nil {
 				continue
 			}
 
@@ -150,7 +203,7 @@ func (c *Client) polling() {
 			//}
 
 			evs := make([]*Event, 0)
-			if err := json.Unmarshal(response.Payload, &evs); err != nil {
+			if err := json.Unmarshal(result, &evs); err != nil {
 				logger.WithFields(logrus.Fields{
 					"error": err.Error(),
 				}).Error("Unmarshal response payload")
@@ -215,7 +268,8 @@ func (c *Client) polling() {
 func (c *Client) Stop() error {
 	c.ticker.Stop()
 	c.done <- true
-	return c.consumer.Shutdown()
+	//return c.consumer.Shutdown()
+	return nil
 }
 
 func (c *Client) Name() string {
@@ -230,6 +284,34 @@ func (c *Client) GetIBTP() chan *pb.IBTP {
 	return c.eventC
 }
 
+func toPublicFunction(funcName string) string {
+	var upperStr string
+	vv := []rune(funcName)
+	for i := 0; i < len(vv); i++ {
+		if i == 0 {
+			if vv[i] >= 97 && vv[i] <= 122 {
+				vv[i] -= 32
+				upperStr += string(vv[i])
+			} else {
+				fmt.Println("Not begins with lowercase letter,")
+				return funcName
+			}
+		} else {
+			upperStr += string(vv[i])
+		}
+	}
+	return upperStr
+}
+
+// ToChaincodeArgs converts string args to []byte args
+func toChaincodeArgs(args ...string) [][]byte {
+	bargs := make([][]byte, len(args))
+	for i, arg := range args {
+		bargs[i] = []byte(arg)
+	}
+	return bargs
+}
+
 func (c *Client) SubmitIBTP(ibtp *pb.IBTP) (*model.PluginResponse, error) {
 	pd := &pb.Payload{}
 	ret := &model.PluginResponse{}
@@ -241,25 +323,32 @@ func (c *Client) SubmitIBTP(ibtp *pb.IBTP) (*model.PluginResponse, error) {
 		return ret, fmt.Errorf("ibtp content unmarshal: %w", err)
 	}
 
-	args := util.ToChaincodeArgs(ibtp.From, strconv.FormatUint(ibtp.Index, 10), content.DstContractId)
-	args = append(args, content.Args...)
-	request := channel.Request{
-		ChaincodeID: c.meta.CCID,
-		Fcn:         content.Func,
-		Args:        args,
+	args := make([]string, len(content.Args) + 3)
+	args = append(args, ibtp.From, strconv.FormatUint(ibtp.Index, 10), content.DstContractId)
+	//args := util.ToChaincodeArgs(ibtp.From, strconv.FormatUint(ibtp.Index, 10), content.DstContractId)
+	for i := 0; i < len(content.Args); i ++ {
+		args = append(args, string(content.Args[i]))
 	}
+	funcName := toPublicFunction(content.Func)
+	//args = append(args, content.Args...)
+	//request := channel.Request{
+	//	ChaincodeID: c.meta.CCID,
+	//	Fcn:         content.Func,
+	//	Args:        args,
+	//}
 
 	// retry executing
-	var res channel.Response
+	var res []byte
 	var proof []byte
 	var err error
 	if err := retry.Retry(func(attempt uint) error {
-		res, err = c.consumer.ChannelClient.Execute(request)
+		res, err = c.contract.SubmitTransaction(funcName, args...)
+		//res, err = c.consumer.ChannelClient.Execute(request)
 		if err != nil {
-			if strings.Contains(err.Error(), "Chaincode status Code: (500)") {
-				res.ChaincodeStatus = shim.ERROR
-				return nil
-			}
+			//if strings.Contains(err.Error(), "Chaincode status Code: (500)") {
+			//	res.ChaincodeStatus = shim.ERROR
+			//	return nil
+			//}
 			return fmt.Errorf("execute request: %w", err)
 		}
 
@@ -268,34 +357,35 @@ func (c *Client) SubmitIBTP(ibtp *pb.IBTP) (*model.PluginResponse, error) {
 		logger.Panicf("Can't send rollback ibtp back to bitxhub: %s", err.Error())
 	}
 
-	response := &Response{}
-	if err := json.Unmarshal(res.Payload, response); err != nil {
-		return nil, err
-	}
+	//response := &Response{}
+	//if err := json.Unmarshal(res.Payload, response); err != nil {
+	//	return nil, err
+	//}
 
 	// if there is callback function, parse returned value
-	result := util.ToChaincodeArgs(strings.Split(string(response.Data), ",")...)
+	result := toChaincodeArgs(strings.Split(string(res), ",")...)
 	newArgs := make([][]byte, 0)
-	ret.Status = response.OK
-	ret.Message = response.Message
+	ret.Status = true// response.OK
+	ret.Message = "success"// response.Message
 
 	// If no callback function to invoke, then simply return
 	if content.Callback == "" {
 		return ret, nil
 	}
 
-	proof, err = c.getProof(res)
-	if err != nil {
-		return ret, err
-	}
+	//proof, err = c.getProof(res)
+	proof = []byte("success")
+	//if err != nil {
+	//	return ret, err
+	//}
 
 	switch content.Func {
 	case "interchainGet":
 		newArgs = append(newArgs, content.Args[0])
 		newArgs = append(newArgs, result...)
-	case "interchainCharge":
-		newArgs = append(newArgs, []byte(strconv.FormatBool(response.OK)), content.Args[0])
-		newArgs = append(newArgs, content.Args[2:]...)
+	//case "interchainCharge":
+	//	newArgs = append(newArgs, []byte(strconv.FormatBool(response.OK)), content.Args[0])
+	//	newArgs = append(newArgs, content.Args[2:]...)
 	}
 
 	ret.Result, err = c.generateCallback(ibtp, newArgs, proof)
@@ -307,37 +397,26 @@ func (c *Client) SubmitIBTP(ibtp *pb.IBTP) (*model.PluginResponse, error) {
 }
 
 func (c *Client) GetOutMessage(to string, idx uint64) (*pb.IBTP, error) {
-	args := util.ToChaincodeArgs(to, strconv.FormatUint(idx, 10))
-	request := channel.Request{
-		ChaincodeID: c.meta.CCID,
-		Fcn:         GetOutMessageMethod,
-		Args:        args,
-	}
-
-	var response channel.Response
-	response, err := c.consumer.ChannelClient.Execute(request)
+	result, err := c.contract.EvaluateTransaction(GetOutMessageMethod, to, strconv.FormatUint(idx, 10))
 	if err != nil {
 		return nil, err
 	}
-
-	return c.unpackIBTP(&response, pb.IBTP_INTERCHAIN)
+	ret := &Event{}
+	if err := json.Unmarshal(result, ret); err != nil {
+		return nil, err
+	}
+	return ret.Convert2IBTP(c.pierId, pb.IBTP_INTERCHAIN), nil
+	//return c.unpackIBTP(&response, pb.IBTP_INTERCHAIN)
 }
 
-func (c *Client) GetInMessage(from string, index uint64) ([][]byte, error) {
-	request := channel.Request{
-		ChaincodeID: c.meta.CCID,
-		Fcn:         GetInMessageMethod,
-		Args:        util.ToChaincodeArgs(from, strconv.FormatUint(index, 10)),
-	}
+func (c *Client) GetInMessage(from string, idx uint64) ([][]byte, error) {
 
-	var response channel.Response
-	response, err := c.consumer.ChannelClient.Execute(request)
+	result, err := c.contract.EvaluateTransaction(GetInMessageMethod, from, strconv.FormatUint(idx, 10))
 	if err != nil {
-		return nil, fmt.Errorf("execute req: %w", err)
+		return nil, err
 	}
-
-	results := strings.Split(string(response.Payload), ",")
-	return util.ToChaincodeArgs(results...), nil
+	results := strings.Split(string(result), ",")
+	return toChaincodeArgs(results...), nil
 }
 
 func (c *Client) GetInMeta() (map[string]uint64, error) {
