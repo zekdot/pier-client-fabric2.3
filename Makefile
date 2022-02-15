@@ -18,8 +18,8 @@ test-coverage:
 ## make fabric1.4: build fabric(1.4) client plugin
 fabric2.3:
 	mkdir -p build
-# -gcflags="all=-N -l"
-	$(GO) build -trimpath --buildmode=plugin -o build/fabric2.3.so ./*.go
+# -gcflags="all=-N -l" -trimpath
+	$(GO) build --buildmode=plugin -o build/fabric2.3.so ./*.go
 
 docker:
 	mkdir -p build
