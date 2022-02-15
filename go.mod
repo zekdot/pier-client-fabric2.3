@@ -1,6 +1,6 @@
 module github.com/meshplus/pier-client-fabric
 
-go 1.15
+go 1.13
 
 require (
 	github.com/Rican7/retry v0.1.0
@@ -49,3 +49,11 @@ replace github.com/pelletier/go-toml => github.com/pelletier/go-toml v1.2.0
 replace github.com/spf13/jwalterweatherman => github.com/spf13/jwalterweatherman v1.0.0
 
 replace github.com/mholt/archiver => github.com/mholt/archiver v0.0.0-20180417220235-e4ef56d48eb0
+
+//replace github.com/btcsuite/btcd => github.com/btcsuite/btcd v0.20.1-beta
+//
+//replace google.golang.org/genproto => google.golang.org/genproto v0.0.0-20200218151345-dad8c97a84f5
+//
+//replace github.com/spf13/cast => github.com/spf13/cast v1.3.0
+//
+//replace github.com/mitchellh/mapstructure => github.com/mitchellh/mapstructure v1.1.2

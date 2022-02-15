@@ -16,9 +16,10 @@ test-coverage:
 	@cat cover.out >> coverage.txt
 
 ## make fabric1.4: build fabric(1.4) client plugin
-fabric1.4:
+fabric2.3:
 	mkdir -p build
-	$(GO) build --buildmode=plugin -o build/fabric-client-1.4.so ./*.go
+# -gcflags="all=-N -l"
+	$(GO) build -trimpath --buildmode=plugin -o build/fabric2.3.so ./*.go
 
 docker:
 	mkdir -p build

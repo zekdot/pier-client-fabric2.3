@@ -1,5 +1,5 @@
 addr = "localhost:7053"
-organizations_path = "/home/zekdot/fabric-samples/test-network/organizations"
+organizations_path = "/home/zekdot/fabric/fabric-samples/test-network/organizations"
 username = "appuser"
 ccid = "broker"
 channel_id = "mychannel"

@@ -1,0 +1,1 @@
+rsync -av . zekdot@zekdot:/home/zekdot/bitxhub/pier-client-fabric2.3
