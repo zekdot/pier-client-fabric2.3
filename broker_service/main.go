@@ -27,7 +27,7 @@ func (s *Service) init() error {
 	//log.Println(reqConfig)
 	reqConfig := &Fabric{
 		Addr:        "localhost:7053",
-		OrganizationsPath:        "/home/zekdot/fabric/fabric-samples/test-network/organizations",
+		OrganizationsPath:        "/home/zekdot/bitxhub/fabric-samples/test-network/organizations",
 		Username:    "appuser",
 		CCID:        "broker",
 		ChannelId:   "mychannel",
