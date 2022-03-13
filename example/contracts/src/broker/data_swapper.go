@@ -46,3 +46,16 @@ func (b *Broker) Set(ctx contractapi.TransactionContextInterface) error {
 
 	return nil
 }
+
+func main() {
+	chaincode, err := contractapi.NewChaincode(new(Broker))
+
+	if err != nil {
+		fmt.Printf("Error create broker chaincode: %s", err.Error())
+		return
+	}
+
+	if err := chaincode.Start(); err != nil {
+		fmt.Printf("Error starting broker chaincode: %s", err.Error())
+	}
+}

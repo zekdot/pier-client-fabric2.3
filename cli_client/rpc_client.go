@@ -126,6 +126,7 @@ func (rpcClient *RpcClient) InterchainGet(toId string, contractId string, key st
 		return err
 	}
 	reqArgs = ReqArgs{
+
 		"set",
 		[]string{"outter-meta", string(outMetaBytes)},
 	}
