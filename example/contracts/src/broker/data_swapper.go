@@ -9,6 +9,10 @@ type Broker struct {
 	contractapi.Contract
 }
 
+func (broker *Broker) Init(ctx contractapi.TransactionContextInterface) error {
+	return nil
+}
+
 // get is business function which will invoke the to,tid,id
 func (broker *Broker) Get(ctx contractapi.TransactionContextInterface) (string, error) {
 	_, args := ctx.GetStub().GetFunctionAndParameters()

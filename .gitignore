@@ -9,3 +9,5 @@ bin
 cover.out
 cover.html
 coverage.txt
+push.sh
+deploy.sh

@@ -25,16 +25,6 @@ github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/empty
 github.com/golang/protobuf/ptypes/timestamp
-# github.com/hyperledger/fabric v2.1.1+incompatible
-## explicit
-github.com/hyperledger/fabric/bccsp
-github.com/hyperledger/fabric/bccsp/factory
-github.com/hyperledger/fabric/bccsp/pkcs11
-github.com/hyperledger/fabric/bccsp/sw
-github.com/hyperledger/fabric/bccsp/utils
-github.com/hyperledger/fabric/common/flogging
-github.com/hyperledger/fabric/common/flogging/fabenc
-github.com/hyperledger/fabric/common/util
 # github.com/hyperledger/fabric-chaincode-go v0.0.0-20210718160520-38d29fabecb9
 ## explicit
 github.com/hyperledger/fabric-chaincode-go/pkg/attrmgr
@@ -63,41 +53,20 @@ github.com/joho/godotenv
 github.com/mailru/easyjson/buffer
 github.com/mailru/easyjson/jlexer
 github.com/mailru/easyjson/jwriter
-# github.com/miekg/pkcs11 v1.1.1
-## explicit
-github.com/miekg/pkcs11
-# github.com/pkg/errors v0.9.1
-## explicit
-github.com/pkg/errors
 # github.com/rogpeppe/go-internal v1.3.0
 github.com/rogpeppe/go-internal/modfile
 github.com/rogpeppe/go-internal/module
 github.com/rogpeppe/go-internal/semver
-# github.com/sykesm/zap-logfmt v0.0.4
+# github.com/stretchr/testify v1.7.0
 ## explicit
-github.com/sykesm/zap-logfmt
 # github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f
 github.com/xeipuuv/gojsonpointer
 # github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415
 github.com/xeipuuv/gojsonreference
 # github.com/xeipuuv/gojsonschema v1.2.0
 github.com/xeipuuv/gojsonschema
-# go.uber.org/atomic v1.7.0
-go.uber.org/atomic
-# go.uber.org/multierr v1.6.0
-go.uber.org/multierr
-# go.uber.org/zap v1.20.0
-## explicit
-go.uber.org/zap
-go.uber.org/zap/buffer
-go.uber.org/zap/internal/bufferpool
-go.uber.org/zap/internal/color
-go.uber.org/zap/internal/exit
-go.uber.org/zap/zapcore
-go.uber.org/zap/zapgrpc
-# golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
-golang.org/x/crypto/sha3
 # golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4
+## explicit
 golang.org/x/net/http/httpguts
 golang.org/x/net/http2
 golang.org/x/net/http2/hpack
@@ -105,7 +74,7 @@ golang.org/x/net/idna
 golang.org/x/net/internal/timeseries
 golang.org/x/net/trace
 # golang.org/x/sys v0.0.0-20210510120138-977fb7262007
-golang.org/x/sys/cpu
+## explicit
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
 # golang.org/x/text v0.3.3
@@ -114,6 +83,8 @@ golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 golang.org/x/text/width
+# golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
+## explicit
 # google.golang.org/genproto v0.0.0-20180831171423-11092d34479b
 google.golang.org/genproto/googleapis/rpc/status
 # google.golang.org/grpc v1.23.0
@@ -184,3 +155,5 @@ google.golang.org/protobuf/types/known/emptypb
 google.golang.org/protobuf/types/known/timestamppb
 # gopkg.in/yaml.v2 v2.2.8
 gopkg.in/yaml.v2
+# gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+## explicit
