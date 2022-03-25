@@ -175,6 +175,13 @@ func (c *Client) SubmitIBTP(ibtp *pb.IBTP) (*model.PluginResponse, error) {
 		if content.Func == "interchainGet" {
 			res, _ = c.client.InterchainGet(args)
 		} else if content.Func == "interchainSet" {
+			// HACK fix comma ignore problem
+			var fullData = args[4]
+			for i := 5; i < len(args); i ++ {
+				fullData += "," + args[i]
+			}
+			args[4] = fullData
+			args = args[:5]
 			c.client.InterchainSet(args)
 		}
 		//res, err = c.contract.SubmitTransaction(funcName, args...)
